@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+@theme {
+  --color-premium-black: #1f2937;
+  --color-premium-gold: #2563eb;
+  --color-premium-gold-light: #3b82f6;
+  --color-premium-gray: #4b5563;
+  --color-premium-light-gray: #f3f4f6;
+  
+  --font-serif: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+:root {
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  font-weight: 400;
+
+  color-scheme: light;
+  color: var(--color-premium-black);
+  background-color: #ffffff;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, .font-serif {
+  font-family: var(--font-serif);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+@layer utilities {
+  .premium-gradient {
+    background: #1e3a8a;
+  }
+
+  .gold-text {
+    color: var(--color-premium-gold);
+  }
+
+  .gold-bg {
+    background-color: var(--color-premium-gold);
+  }
+
+  .text-luxury {
+    @apply tracking-normal text-sm font-medium;
+  }
+}

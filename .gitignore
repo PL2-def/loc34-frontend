@@ -1,0 +1,38 @@
+# Dependency directories
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+**/dist/
+dist-ssr/
+**/dist-ssr/
+
+# Environment variables
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Logs
+*.log
+**/logs/
+
+# Database
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+**/prisma/*.sqlite
+**/prisma/*.sqlite-shm
+**/prisma/*.sqlite-wal
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backend specific
+car-rental-site/server-ts/uploads/
+car-rental-site/server-ts/backups/
+
+# IDE files
+.vscode/
