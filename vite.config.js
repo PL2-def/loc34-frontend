@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   // Keep the base path for GitHub Pages compatibility
-  base: process.env.NODE_ENV === 'production' ? '/loc34/' : '/',
+  base: process.env.NODE_ENV === 'production' ? '/loc34-frontend/' : '/',
   server: {
     allowedHosts: 'all',
     host: true,
