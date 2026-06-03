@@ -38,6 +38,9 @@ const Contract = () => {
           return;
         }
         setBooking(found);
+        if (found.contract && found.contract.signature_url) {
+          setAgreed(true);
+        }
       } catch {
         toast.error('Impossible de charger la réservation.');
         navigate('/my-bookings');
@@ -117,8 +120,7 @@ const Contract = () => {
                 <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-3">Loueur</p>
                 <p className="font-bold text-sm">Loc 34 S.A.</p>
                 <p className="text-xs text-gray-500 mt-1">123 Rue de la Location</p>
-                <p className="text-xs text-gray-500">75000 Paris, France</p>
-                <p className="text-xs text-gray-500">RCS Paris B 123 456 789</p>
+                <p className="text-xs text-gray-500">34500 Béziers, France</p>
               </div>
               <div className="bg-premium-light-gray p-6">
                 <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-3">Locataire</p>
@@ -211,54 +213,64 @@ const Contract = () => {
               Signature Électronique
             </h2>
 
-            <label className="flex items-start gap-3 cursor-pointer mb-8">
-              <input
-                id="contract-agree-checkbox"
-                type="checkbox"
-                checked={agreed}
-                onChange={(e) => setAgreed(e.target.checked)}
-                className="mt-0.5 accent-premium-gold"
-              />
-              <span className="text-xs text-gray-600 leading-relaxed">
-                J'ai lu et j'accepte les conditions générales de location de Loc 34.
-                Je certifie que les informations fournies sont exactes et m'engage à respecter
-                les termes du présent contrat.
-              </span>
-            </label>
-
-            {!agreed && (
-              <div className="flex items-center gap-3 text-yellow-700 bg-yellow-50 border border-yellow-200 px-4 py-3 mb-6">
-                <AlertTriangle size={14} />
-                <p className="text-[9px] uppercase tracking-widest">
-                  Veuillez accepter les conditions avant de signer.
-                </p>
+            {booking.contract && booking.contract.signature_url ? (
+              <div className="border border-dashed border-gray-300 p-6 bg-gray-50 flex flex-col items-center justify-center rounded-lg">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-green-700 mb-2">Contrat signé électroniquement</p>
+                <img src={booking.contract.signature_url} alt="Signature" className="max-h-24 object-contain mb-2 bg-white p-2 border border-gray-200" />
+                <p className="text-[9px] text-gray-400">Le {formatDate(booking.contract.signed_at || booking.contract.created_at)}</p>
               </div>
-            )}
-
-            {showPad ? (
-              <SignaturePad
-                onSave={handleSign}
-                onCancel={() => setShowPad(false)}
-              />
             ) : (
-              <button
-                id="sign-contract-btn"
-                onClick={() => setShowPad(true)}
-                disabled={!agreed || signing}
-                className="flex items-center gap-3 w-full py-5 bg-premium-black text-white font-bold uppercase tracking-[0.3em] text-[10px] hover:bg-premium-gold transition-all duration-500 justify-center disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {signing ? (
-                  <>
-                    <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Signature en cours...
-                  </>
-                ) : (
-                  <>
-                    <FileCheck size={16} />
-                    Signer le contrat
-                  </>
+              <>
+                <label className="flex items-start gap-3 cursor-pointer mb-8">
+                  <input
+                    id="contract-agree-checkbox"
+                    type="checkbox"
+                    checked={agreed}
+                    onChange={(e) => setAgreed(e.target.checked)}
+                    className="mt-0.5 accent-premium-gold"
+                  />
+                  <span className="text-xs text-gray-600 leading-relaxed">
+                    J'ai lu et j'accepte les conditions générales de location de Loc 34.
+                    Je certifie que les informations fournies sont exactes et m'engage à respecter
+                    les termes du présent contrat.
+                  </span>
+                </label>
+
+                {!agreed && (
+                  <div className="flex items-center gap-3 text-yellow-700 bg-yellow-50 border border-yellow-200 px-4 py-3 mb-6">
+                    <AlertTriangle size={14} />
+                    <p className="text-[9px] uppercase tracking-widest">
+                      Veuillez accepter les conditions avant de signer.
+                    </p>
+                  </div>
                 )}
-              </button>
+
+                {showPad ? (
+                  <SignaturePad
+                    onSave={handleSign}
+                    onCancel={() => setShowPad(false)}
+                  />
+                ) : (
+                  <button
+                    id="sign-contract-btn"
+                    onClick={() => setShowPad(true)}
+                    disabled={!agreed || signing}
+                    className="flex items-center gap-3 w-full py-5 bg-premium-black text-white font-bold uppercase tracking-[0.3em] text-[10px] hover:bg-premium-gold transition-all duration-500 justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {signing ? (
+                      <>
+                        <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Signature en cours...
+                      </>
+                    ) : (
+                      <>
+                        <FileCheck size={16} />
+                        Signer le contrat
+                      </>
+                    )}
+                  </button>
+                )}
+              </>
             )}
           </section>
         </Motion.div>

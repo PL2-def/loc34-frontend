@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Instagram, Twitter } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -13,11 +12,6 @@ const Footer = () => {
           <p className="text-gray-400 text-sm">
             Location de voitures simple et rapide.
           </p>
-          <div className="flex gap-4">
-            <Instagram size={18} className="text-gray-400 hover:text-premium-gold transition-colors cursor-pointer" />
-            <Facebook size={18} className="text-gray-400 hover:text-premium-gold transition-colors cursor-pointer" />
-            <Twitter size={18} className="text-gray-400 hover:text-premium-gold transition-colors cursor-pointer" />
-          </div>
         </div>
 
         <div>
@@ -32,9 +26,8 @@ const Footer = () => {
         <div>
           <h4 className="text-sm font-bold mb-4 text-premium-gold">Contact</h4>
           <ul className="space-y-2 text-sm text-gray-400">
-            <li>Paris, France</li>
-            <li>+33 1 23 45 67 89</li>
-            <li>contact@loc34.com</li>
+            <li>Béziers, France</li>
+            <li>pl2def24@gmail.com</li>
           </ul>
         </div>
       </div>

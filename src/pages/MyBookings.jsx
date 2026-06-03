@@ -326,7 +326,7 @@ const MyBookings = () => {
                                 className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-premium-gold hover:text-premium-black transition-colors"
                               >
                                 <FileText size={13} />
-                                Signer le contrat
+                                {booking.contract?.signature_url ? 'Voir le contrat' : 'Signer le contrat'}
                               </Link>
                             )}
                           </>

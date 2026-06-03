@@ -14,7 +14,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import { Star, MapPin, Shield, ChevronRight, ChevronLeft, Calendar, X, Info, Check } from 'lucide-react';
+import { Star, MapPin, Shield, ChevronRight, ChevronLeft, Calendar, X, Info, Check, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../api';
 import { useAuth } from '../hooks/useAuth';
@@ -226,6 +226,7 @@ const CarDetails = () => {
   // Active photo state for carousel
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showLightbox, setShowLightbox] = useState(false);
+  const [zoomScale, setZoomScale] = useState(1);
 
   // Review form
   const [reviewRating, setReviewRating] = useState(5);
@@ -478,7 +479,7 @@ const CarDetails = () => {
     setShowPayment(true);
   };
 
-  const handlePaymentComplete = async (method, paypalOrderId) => {
+  const handlePaymentComplete = async (method, paypalOrderId, signature) => {
     const isCustom = deliveryLocation === 'Livraison personnalisée';
     setBookingLoading(true);
     try {
@@ -502,6 +503,12 @@ const CarDetails = () => {
       if (method === 'paypal') {
         await api.post(`/bookings/${booking.id}/pay-paypal`, {
           paypalOrderId,
+        });
+      }
+
+      if (signature) {
+        await api.post(`/bookings/${booking.id}/sign-contract`, {
+          signature,
         });
       }
 
@@ -580,6 +587,14 @@ const CarDetails = () => {
             >
               <PaymentForm
                 total={totalPrice}
+                vehicle={vehicle}
+                startDate={startDate}
+                endDate={endDate}
+                selectedOptions={selectedOptions}
+                optionsList={options}
+                deliveryLocation={deliveryLocation}
+                deliveryAddress={deliveryAddress}
+                user={user}
                 onComplete={handlePaymentComplete}
                 onSuccess={handlePaymentSuccess}
                 onCancel={() => setShowPayment(false)}
@@ -597,39 +612,96 @@ const CarDetails = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/95 z-[100] flex flex-col items-center justify-center p-4 select-none"
-            onClick={() => setShowLightbox(false)}
+            onClick={() => {
+              setShowLightbox(false);
+              setZoomScale(1);
+            }}
           >
+            {/* Zoom Controls */}
+            <div className="absolute top-6 left-6 flex items-center gap-1 z-50 bg-black/55 p-2 rounded-xl backdrop-blur-md border border-white/10 shadow-lg" onClick={e => e.stopPropagation()}>
+              <button
+                type="button"
+                onClick={() => setZoomScale(prev => Math.min(prev + 0.5, 4))}
+                className="text-white/80 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-all flex items-center justify-center cursor-pointer"
+                title="Zoomer (+)"
+              >
+                <ZoomIn size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setZoomScale(prev => Math.max(prev - 0.5, 1))}
+                className="text-white/80 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-all flex items-center justify-center cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
+                title="Dézoomer (-)"
+                disabled={zoomScale <= 1}
+              >
+                <ZoomOut size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setZoomScale(1)}
+                className="text-white/80 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-all flex items-center justify-center cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
+                title="Réinitialiser"
+                disabled={zoomScale <= 1}
+              >
+                <RotateCcw size={16} />
+              </button>
+              <div className="w-[1px] h-5 bg-white/20 mx-1"></div>
+              <span className="text-white/80 text-[10px] font-bold uppercase tracking-wider px-2 min-w-[50px] text-center">
+                {Math.round(zoomScale * 100)}%
+              </span>
+            </div>
+
             {/* Close button */}
             <button 
               type="button"
-              onClick={() => setShowLightbox(false)}
-              className="absolute top-6 right-6 text-white/70 hover:text-white p-2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-all z-50 shadow-md flex items-center justify-center"
+              onClick={() => {
+                setShowLightbox(false);
+                setZoomScale(1);
+              }}
+              className="absolute top-6 right-6 text-white/70 hover:text-white p-2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-all z-50 shadow-md flex items-center justify-center cursor-pointer"
             >
               <X size={20} />
             </button>
 
-            {/* Main high-res image */}
-            <div className="relative max-w-5xl w-full max-h-[80vh] flex items-center justify-center" onClick={e => e.stopPropagation()}>
+            {/* Main high-res image container with overflow hidden to prevent scrollbars */}
+            <div className="relative max-w-5xl w-full h-[75vh] flex items-center justify-center overflow-hidden" onClick={e => e.stopPropagation()}>
               <Motion.img
                 key={currentImageIndex}
                 src={getFullImageUrl(images[currentImageIndex])}
                 alt={`${vehicle.brand} ${vehicle.model}`}
                 initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
+                animate={{ scale: zoomScale, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
-                className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
+                drag={zoomScale > 1}
+                dragConstraints={{
+                  left: -400 * (zoomScale - 1),
+                  right: 400 * (zoomScale - 1),
+                  top: -250 * (zoomScale - 1),
+                  bottom: 250 * (zoomScale - 1)
+                }}
+                dragElastic={0.1}
+                onDoubleClick={() => setZoomScale(prev => prev > 1 ? 1 : 2.5)}
+                className={`max-w-full max-h-full object-contain rounded-lg shadow-2xl transition-all duration-200 select-none ${
+                  zoomScale > 1 ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'
+                }`}
+                onClick={(e) => {
+                  if (zoomScale === 1) {
+                    setZoomScale(2.5);
+                  }
+                }}
               />
 
-              {images.length > 1 && (
+              {images.length > 1 && zoomScale === 1 && (
                 <>
                   {/* Left arrow */}
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
+                      setZoomScale(1);
                       setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
                     }}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/15 hover:bg-white/25 border border-white/10 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-all shadow-lg active:scale-95"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/15 hover:bg-white/25 border border-white/10 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-all shadow-lg active:scale-95 cursor-pointer"
                   >
                     <ChevronLeft size={24} />
                   </button>
@@ -639,9 +711,10 @@ const CarDetails = () => {
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
+                      setZoomScale(1);
                       setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
                     }}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/15 hover:bg-white/25 border border-white/10 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-all shadow-lg active:scale-95"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/15 hover:bg-white/25 border border-white/10 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-all shadow-lg active:scale-95 cursor-pointer"
                   >
                     <ChevronRight size={24} />
                   </button>
@@ -656,8 +729,11 @@ const CarDetails = () => {
                   <button
                     key={i}
                     type="button"
-                    onClick={() => setCurrentImageIndex(i)}
-                    className={`w-16 h-12 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
+                    onClick={() => {
+                      setZoomScale(1);
+                      setCurrentImageIndex(i);
+                    }}
+                    className={`w-16 h-12 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 cursor-pointer ${
                       i === currentImageIndex ? 'border-premium-gold scale-105 shadow-md' : 'border-transparent opacity-60 hover:opacity-100'
                     }`}
                   >

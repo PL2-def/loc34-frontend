@@ -1,14 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, ShieldCheck, Wallet, Check, AlertCircle } from 'lucide-react';
+import { Lock, ShieldCheck, Wallet, Check, AlertCircle, FileText, ChevronRight, AlertTriangle } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import SignaturePad from './SignaturePad';
+import { formatPrice } from '../utils/calculations';
 
-const PaymentForm = ({ total, onComplete, onSuccess, onCancel }) => {
+const PaymentForm = ({ 
+  total, 
+  vehicle, 
+  startDate, 
+  endDate, 
+  selectedOptions, 
+  optionsList, 
+  deliveryLocation, 
+  deliveryAddress, 
+  user, 
+  onComplete, 
+  onSuccess, 
+  onCancel 
+}) => {
   const [paymentMethod, setPaymentMethod] = useState(total <= 0 ? 'cash' : 'paypal'); // 'paypal' or 'cash'
-  const [step, setStep] = useState('input'); // 'input', 'processing', 'success', 'error'
+  const [step, setStep] = useState('contract'); // 'contract', 'input', 'processing', 'success', 'error'
   const [errorMsg, setErrorMsg] = useState('');
   const [sdkLoaded, setSdkLoaded] = useState(false);
   const [sdkError, setSdkError] = useState(false);
+
+  // Contract state
+  const [contractAgreed, setContractAgreed] = useState(false);
+  const [signature, setSignature] = useState(null);
+  const [showSignaturePad, setShowSignaturePad] = useState(false);
 
   // Dynamically load the PayPal SDK script when 'paypal' is selected
   useEffect(() => {
@@ -83,8 +103,8 @@ const PaymentForm = ({ total, onComplete, onSuccess, onCancel }) => {
           setErrorMsg('');
 
           try {
-            // Call parent onComplete with order ID to trigger server-side capture
-            await onComplete('paypal', data.orderID);
+            // Call parent onComplete with order ID and signature to trigger server-side capture
+            await onComplete('paypal', data.orderID, signature);
             
             setStep('success');
             setTimeout(() => {
@@ -107,13 +127,13 @@ const PaymentForm = ({ total, onComplete, onSuccess, onCancel }) => {
         onError: (err) => {
           console.error('[PayPal SDK Error]:', err);
           setStep('error');
-          setErrorMsg('Une erreur technique est survenue avec le service de paiement PayPal. Veuillez réessayer.');
+          setErrorMsg('Une erreur technique est survenue avec le service de paiement PayPal. Veuillez réesayer.');
         }
       }).render('#paypal-button-container');
     } catch (err) {
       console.error('Error rendering PayPal buttons:', err);
     }
-  }, [sdkLoaded, paymentMethod, total, step, onComplete, onSuccess]);
+  }, [sdkLoaded, paymentMethod, total, step, onComplete, onSuccess, signature]);
 
   const handleCashSubmit = async (e) => {
     e.preventDefault();
@@ -124,7 +144,7 @@ const PaymentForm = ({ total, onComplete, onSuccess, onCancel }) => {
 
     try {
       // Direct booking creation for cash on site
-      const apiPromise = onComplete('cash', null);
+      const apiPromise = onComplete('cash', null, signature);
       
       // Artificial delay for high-fidelity security presentation
       await Promise.all([
@@ -148,12 +168,162 @@ const PaymentForm = ({ total, onComplete, onSuccess, onCancel }) => {
     }
   };
 
+  const handleSaveSignature = (signatureDataUrl) => {
+    setSignature(signatureDataUrl);
+    setShowSignaturePad(false);
+    setStep('input');
+    toast.success('Contrat accepté et signé !');
+  };
+
+  const formatDateFrench = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const months = [
+      'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+      'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
+    ];
+    return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+  };
+
+  // Option helper
+  const selectedOptionsDetailed = optionsList && selectedOptions
+    ? optionsList.filter(o => selectedOptions.includes(o.id))
+    : [];
+
   return (
-    <div className="bg-white p-8 md:p-10 border border-premium-gold/30 shadow-2xl max-w-md w-full mx-auto relative overflow-hidden">
+    <div className={`bg-white p-6 md:p-8 border border-premium-gold/30 shadow-2xl mx-auto relative overflow-hidden transition-all duration-300 rounded-xl ${
+      step === 'contract' ? 'max-w-2xl w-full' : 'max-w-md w-full'
+    }`}>
       {/* Decorative top gold line */}
       <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-premium-gold via-yellow-500 to-premium-gold"></div>
 
       <AnimatePresence mode="wait">
+        {step === 'contract' && (
+          <Motion.div
+            key="contract-step"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-6"
+          >
+            <div className="flex justify-between items-center pb-4 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <FileText size={18} className="text-premium-gold" />
+                <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-premium-black">Étape 1 : Contrat de Location</h2>
+              </div>
+              <span className="text-[10px] text-gray-400 font-semibold">1 / 2</span>
+            </div>
+
+            {/* Simulated paper contract */}
+            <div className="max-h-[350px] overflow-y-auto bg-gray-50/70 p-5 border border-gray-200 rounded-lg text-left space-y-6 font-sans text-xs text-gray-700 shadow-inner">
+              <div className="text-center pb-4 border-b border-gray-200">
+                <h3 className="font-serif text-lg font-bold text-premium-black">CONTRAT DE LOCATION DE VÉHICULE</h3>
+                <p className="text-[9px] uppercase tracking-wider text-gray-400 mt-1">Loc 34 Services Premium</p>
+              </div>
+
+              {/* Parties */}
+              <div className="grid grid-cols-2 gap-4 text-[11px]">
+                <div>
+                  <h4 className="font-bold text-gray-900 uppercase text-[9px] tracking-wider mb-1 text-premium-gold">Le Loueur</h4>
+                  <p className="font-semibold text-gray-800">Loc 34 S.A.</p>
+                  <p>123 Rue de la Location, 34500 Béziers</p>
+                </div>
+                <div>
+                  <h4 className="font-bold text-gray-900 uppercase text-[9px] tracking-wider mb-1 text-premium-gold">Le Locataire</h4>
+                  <p className="font-semibold text-gray-800">{user?.name || 'Client'}</p>
+                  <p>{user?.email}</p>
+                </div>
+              </div>
+
+              {/* Booking Info */}
+              <div className="border-t border-b border-gray-200 py-3 space-y-1.5 text-[11px]">
+                <p><span className="font-semibold text-gray-800">Véhicule :</span> {vehicle?.brand} {vehicle?.model} ({vehicle?.category})</p>
+                <p><span className="font-semibold text-gray-800">Période :</span> du {formatDateFrench(startDate)} au {formatDateFrench(endDate)}</p>
+                <p><span className="font-semibold text-gray-800">Lieu de livraison :</span> {deliveryLocation} {deliveryAddress ? `(${deliveryAddress})` : ''}</p>
+                {selectedOptionsDetailed.length > 0 && (
+                  <p><span className="font-semibold text-gray-800">Options :</span> {selectedOptionsDetailed.map(o => o.name).join(', ')}</p>
+                )}
+                <p className="pt-1.5 text-sm font-bold text-gray-950 flex justify-between">
+                  <span>Montant Total TTC :</span>
+                  <span className="text-premium-gold">{total.toFixed(2)} €</span>
+                </p>
+              </div>
+
+              {/* Improved Contract Articles */}
+              <div className="space-y-4 text-[10px] text-gray-600 leading-relaxed">
+                <div>
+                  <p className="font-bold text-gray-900 uppercase text-[9px]">Article 1 - Objet et validité</p>
+                  <p>Loc 34 met à disposition du locataire désigné le véhicule ci-dessus. Le locataire déclare posséder un permis de conduire valide depuis plus de 3 ans et être âgé de plus de 25 ans. Il s'engage à respecter scrupuleusement les présentes conditions contractuelles.</p>
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900 uppercase text-[9px]">Article 2 - Utilisation du véhicule</p>
+                  <p>Le locataire est responsable du véhicule. Il s'engage à l'utiliser en bon père de famille, uniquement sur route carrossable, et exclut toute utilisation sur circuit, pour l'apprentissage, ou sous l'emprise d'alcool/stupéfiants. La sous-location est formellement interdite.</p>
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900 uppercase text-[9px]">Article 3 - État et carburant</p>
+                  <p>Un état des lieux contradictoire sera réalisé à la livraison et à la restitution. Le locataire s'engage à restituer le véhicule avec un niveau de carburant identique au départ. Tout dommage non listé au départ sera facturé selon le barème en vigueur.</p>
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900 uppercase text-[9px]">Article 4 - Dépôt de Garantie & Franchise</p>
+                  <p>Un dépôt de garantie obligatoire de 1500€ est requis. En cas de sinistre responsable ou de dommages, la franchise maximale restant à la charge du locataire est fixée à 1500€ par sinistre, sous réserve du respect des conditions générales d'assurance.</p>
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900 uppercase text-[9px]">Article 5 - Restitution tardive</p>
+                  <p>Le véhicule doit être rendu à l'heure convenue. Tout retard non signalé de plus de 30 minutes entraînera une facturation supplémentaire forfaitaire de 50€ par heure entamée.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Checkbox agreement */}
+            {!showSignaturePad ? (
+              <div className="space-y-4">
+                <label className="flex items-start gap-3 cursor-pointer select-none py-2 text-left">
+                  <input
+                    type="checkbox"
+                    checked={contractAgreed}
+                    onChange={(e) => setContractAgreed(e.target.checked)}
+                    className="mt-0.5 accent-premium-gold flex-shrink-0"
+                  />
+                  <span className="text-[11px] text-gray-600 leading-relaxed font-semibold">
+                    J'ai lu, compris, et j'accepte sans réserve les termes du présent contrat de location et les conditions générales de vente de Loc 34.
+                  </span>
+                </label>
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={onCancel}
+                    className="flex-1 py-3 text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-premium-black transition-colors cursor-pointer text-center"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!contractAgreed) {
+                        toast.error('Veuillez d\'abord accepter les termes du contrat.');
+                        return;
+                      }
+                      setShowSignaturePad(true);
+                    }}
+                    className={`flex-1 py-3.5 bg-premium-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-premium-gold transition-all duration-300 shadow-md cursor-pointer flex items-center justify-center gap-2 ${
+                      !contractAgreed ? 'opacity-40 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    Signer le contrat <ChevronRight size={12} />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <SignaturePad
+                onSave={handleSaveSignature}
+                onCancel={() => setShowSignaturePad(false)}
+              />
+            )}
+          </Motion.div>
+        )}
+
         {step === 'input' && (
           <Motion.div
             key="input-form"
@@ -162,12 +332,12 @@ const PaymentForm = ({ total, onComplete, onSuccess, onCancel }) => {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-[10px] font-bold uppercase tracking-[0.4em] text-premium-black">Finaliser la Réservation</h2>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-premium-gold animate-pulse"></span>
-                <span className="text-[8px] font-bold uppercase tracking-widest text-premium-gold">Sécurisé</span>
+            <div className="flex justify-between items-center mb-8 pb-4 border-b border-gray-100">
+              <div>
+                <h2 className="text-[10px] font-bold uppercase tracking-[0.4em] text-premium-black">Étape 2 : Paiement</h2>
+                <p className="text-[8px] font-bold uppercase tracking-widest text-premium-gold mt-1">Contrat signé électroniquement</p>
               </div>
+              <span className="text-[10px] text-gray-400 font-semibold">2 / 2</span>
             </div>
 
             {/* Total due display */}
@@ -265,7 +435,7 @@ const PaymentForm = ({ total, onComplete, onSuccess, onCancel }) => {
                     </div>
                   </div>
 
-                  <div className="space-y-3 p-4 bg-gray-50 border border-gray-100 rounded-lg">
+                  <div className="space-y-3 p-4 bg-gray-50 border border-gray-100 rounded-lg text-left">
                     <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500">Conditions requises sur place :</h4>
                     <ul className="text-xs text-gray-600 space-y-2">
                       <li className="flex items-center gap-2">
@@ -278,7 +448,7 @@ const PaymentForm = ({ total, onComplete, onSuccess, onCancel }) => {
                       </li>
                       <li className="flex items-center gap-2">
                         <Check size={13} className="text-green-600 font-bold" />
-                        <span>Dépôt de garantie par carte ou chèque bancaire</span>
+                        <span>Dépôt de garantie par carte ou chèque bancaire (1500€)</span>
                       </li>
                     </ul>
                   </div>
@@ -297,10 +467,10 @@ const PaymentForm = ({ total, onComplete, onSuccess, onCancel }) => {
             <button 
               type="button"
               id="cancel-payment-btn"
-              onClick={onCancel}
+              onClick={() => setStep('contract')}
               className="w-full text-center text-[9px] font-bold uppercase tracking-widest text-gray-400 hover:text-premium-black transition-colors py-2 mt-4 cursor-pointer"
             >
-              Retourner aux détails
+              Retourner à l'étape du contrat
             </button>
 
             {/* Secure seal footer */}

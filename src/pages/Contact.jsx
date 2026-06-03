@@ -71,18 +71,7 @@ const Contact = () => {
                 <div>
                   <h3 className="text-[10px] font-bold uppercase tracking-widest mb-2">Agence Principale</h3>
                   <p className="text-sm text-gray-500">123 Rue de la Location</p>
-                  <p className="text-sm text-gray-500">75008 Paris, France</p>
-                </div>
-              </div>
-
-              <div className="flex gap-6">
-                <div className="w-12 h-12 bg-premium-light-gray flex items-center justify-center flex-shrink-0">
-                  <Phone size={20} className="text-premium-gold" />
-                </div>
-                <div>
-                  <h3 className="text-[10px] font-bold uppercase tracking-widest mb-2">Téléphone</h3>
-                  <p className="text-sm text-gray-500">+33 (0) 1 23 45 67 89</p>
-                  <p className="text-xs text-gray-400 mt-1">Numéro dédié pour urgences 24/7 (Clients uniquement)</p>
+                  <p className="text-sm text-gray-500">34500 Béziers, France</p>
                 </div>
               </div>
 
@@ -92,8 +81,7 @@ const Contact = () => {
                 </div>
                 <div>
                   <h3 className="text-[10px] font-bold uppercase tracking-widest mb-2">Email</h3>
-                  <p className="text-sm text-gray-500">contact@loc34.com</p>
-                  <p className="text-sm text-gray-500">conciergerie@loc34.com</p>
+                  <p className="text-sm text-gray-500">pl2def24@gmail.com</p>
                 </div>
               </div>
 

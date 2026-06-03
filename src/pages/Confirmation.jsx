@@ -36,10 +36,9 @@ const Confirmation = () => {
           <h1 className="text-4xl font-serif text-premium-black mb-6">
             Merci pour votre confiance
           </h1>
-          <p className="text-sm text-gray-500 leading-relaxed max-w-md mx-auto mb-12">
-            Votre réservation a bien été enregistrée. Vous pouvez consulter votre contrat
-            et télécharger votre facture depuis votre espace personnel. Notre équipe
-            prendra contact avec vous pour confirmer les détails.
+           <p className="text-sm text-gray-500 leading-relaxed max-w-md mx-auto mb-12">
+            Votre réservation a bien été enregistrée et votre contrat de location a été signé électroniquement. 
+            Vous pouvez consulter votre contrat signé et télécharger votre facture depuis votre espace personnel.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -69,7 +68,7 @@ const Confirmation = () => {
           className="mt-16 pt-10 border-t border-gray-200"
         >
           <p className="text-[8px] uppercase tracking-widest text-gray-400">
-            Loc 34 — contact@loc34.com
+            Loc 34 — pl2def24@gmail.com
           </p>
         </Motion.div>
       </div>

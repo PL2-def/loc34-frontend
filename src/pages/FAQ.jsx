@@ -23,7 +23,7 @@ const FAQS = [
   },
   {
     question: "Proposez-vous un service de livraison ?",
-    answer: "Oui, nous livrons nos véhicules dans Paris intra-muros, aux aéroports (CDG, Orly) ainsi que dans les hôtels partenaires. Ce service est facturé selon la zone de livraison."
+    answer: "Oui, nous livrons nos véhicules à Béziers et ses environs ainsi que dans les hôtels partenaires. Ce service est facturé selon la zone de livraison."
   },
   {
     question: "Le kilométrage est-il illimité ?",
