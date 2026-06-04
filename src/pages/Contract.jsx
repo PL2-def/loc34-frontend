@@ -14,7 +14,6 @@ import { motion as Motion } from 'framer-motion';
 import { FileCheck, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../api';
-import SignaturePad from '../components/SignaturePad';
 import { formatPrice } from '../utils/calculations';
 
 const Contract = () => {
@@ -24,7 +23,6 @@ const Contract = () => {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [signing, setSigning] = useState(false);
-  const [showPad, setShowPad] = useState(false);
   const [agreed, setAgreed] = useState(false);
 
   useEffect(() => {
@@ -51,15 +49,17 @@ const Contract = () => {
     fetchBooking();
   }, [bookingId, navigate]);
 
-  const handleSign = async (signatureDataUrl) => {
+  const handleSign = async (signatureText) => {
     setSigning(true);
-    setShowPad(false);
     try {
       await api.post(`/bookings/${bookingId}/sign-contract`, {
-        signature: signatureDataUrl,
+        signature: signatureText,
       });
       toast.success('Contrat signé avec succès !');
-      navigate('/my-bookings');
+      // Fetch fresh details or reload
+      const res = await api.get('/bookings/my-bookings');
+      const found = res.data.find((b) => b.id === Number(bookingId));
+      if (found) setBooking(found);
     } catch (err) {
       const msg =
         err.response?.data?.error ||
@@ -216,7 +216,13 @@ const Contract = () => {
             {booking.contract && booking.contract.signature_url ? (
               <div className="border border-dashed border-gray-300 p-6 bg-gray-50 flex flex-col items-center justify-center rounded-lg">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-green-700 mb-2">Contrat signé électroniquement</p>
-                <img src={booking.contract.signature_url} alt="Signature" className="max-h-24 object-contain mb-2 bg-white p-2 border border-gray-200" />
+                {booking.contract.signature_url.startsWith('data:image') || booking.contract.signature_url.includes('/') ? (
+                  <img src={booking.contract.signature_url} alt="Signature" className="max-h-24 object-contain mb-2 bg-white p-2 border border-gray-200" />
+                ) : (
+                  <p className="text-sm font-serif italic my-3 text-gray-800 border border-gray-200 bg-white p-4 font-bold tracking-wide animate-fade">
+                    {booking.contract.signature_url}
+                  </p>
+                )}
                 <p className="text-[9px] text-gray-400">Le {formatDate(booking.contract.signed_at || booking.contract.created_at)}</p>
               </div>
             ) : (
@@ -245,31 +251,24 @@ const Contract = () => {
                   </div>
                 )}
 
-                {showPad ? (
-                  <SignaturePad
-                    onSave={handleSign}
-                    onCancel={() => setShowPad(false)}
-                  />
-                ) : (
-                  <button
-                    id="sign-contract-btn"
-                    onClick={() => setShowPad(true)}
-                    disabled={!agreed || signing}
-                    className="flex items-center gap-3 w-full py-5 bg-premium-black text-white font-bold uppercase tracking-[0.3em] text-[10px] hover:bg-premium-gold transition-all duration-500 justify-center disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    {signing ? (
-                      <>
-                        <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Signature en cours...
-                      </>
-                    ) : (
-                      <>
-                        <FileCheck size={16} />
-                        Signer le contrat
-                      </>
-                    )}
-                  </button>
-                )}
+                <button
+                  id="sign-contract-btn"
+                  onClick={() => handleSign(`Accepté électroniquement par ${booking.user?.name || 'Client'}`)}
+                  disabled={!agreed || signing}
+                  className="flex items-center gap-3 w-full py-5 bg-premium-black text-white font-bold uppercase tracking-[0.3em] text-[10px] hover:bg-premium-gold transition-all duration-500 justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {signing ? (
+                    <>
+                      <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Signature en cours...
+                    </>
+                  ) : (
+                    <>
+                      <FileCheck size={16} />
+                      Valider et signer le contrat
+                    </>
+                  )}
+                </button>
               </>
             )}
           </section>

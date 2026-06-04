@@ -1364,7 +1364,9 @@ const HomeConfigTab = () => {
       localStorage.setItem('loc34_home_config', JSON.stringify(updated));
       
       toast.success('Apparence sauvegardée et appliquée sur le serveur.');
-      setTimeout(() => window.location.reload(), 800);
+      setTimeout(() => {
+        window.location.href = import.meta.env.BASE_URL || '/';
+      }, 800);
     } catch (err) {
       toast.error(err.response?.data?.message || err.message || 'Impossible d\'enregistrer les configurations.');
     }
@@ -1380,7 +1382,9 @@ const HomeConfigTab = () => {
       document.documentElement.style.setProperty('--color-premium-gold-light', DEFAULT_GOLD + 'E6');
       localStorage.setItem('loc34_home_config', JSON.stringify(reset));
       toast.success('Couleur réinitialisée.');
-      setTimeout(() => window.location.reload(), 800);
+      setTimeout(() => {
+        window.location.href = import.meta.env.BASE_URL || '/';
+      }, 800);
     } catch (_err) {
       toast.error('Erreur lors de la réinitialisation.');
     }

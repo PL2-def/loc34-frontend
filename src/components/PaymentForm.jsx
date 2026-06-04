@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Lock, ShieldCheck, Wallet, Check, AlertCircle, FileText, ChevronRight, AlertTriangle } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import SignaturePad from './SignaturePad';
 import { formatPrice } from '../utils/calculations';
 
 const PaymentForm = ({ 
@@ -28,7 +27,6 @@ const PaymentForm = ({
   // Contract state
   const [contractAgreed, setContractAgreed] = useState(false);
   const [signature, setSignature] = useState(null);
-  const [showSignaturePad, setShowSignaturePad] = useState(false);
 
   // Dynamically load the PayPal SDK script when 'paypal' is selected
   useEffect(() => {
@@ -276,7 +274,6 @@ const PaymentForm = ({
             </div>
 
             {/* Checkbox agreement */}
-            {!showSignaturePad ? (
               <div className="space-y-4">
                 <label className="flex items-start gap-3 cursor-pointer select-none py-2 text-left">
                   <input
@@ -305,22 +302,17 @@ const PaymentForm = ({
                         toast.error('Veuillez d\'abord accepter les termes du contrat.');
                         return;
                       }
-                      setShowSignaturePad(true);
+                      const signText = `Accepté électroniquement par ${user?.name || 'Client'}`;
+                      handleSaveSignature(signText);
                     }}
                     className={`flex-1 py-3.5 bg-premium-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-premium-gold transition-all duration-300 shadow-md cursor-pointer flex items-center justify-center gap-2 ${
                       !contractAgreed ? 'opacity-40 cursor-not-allowed' : ''
                     }`}
                   >
-                    Signer le contrat <ChevronRight size={12} />
+                    Accepter et signer le contrat <ChevronRight size={12} />
                   </button>
                 </div>
               </div>
-            ) : (
-              <SignaturePad
-                onSave={handleSaveSignature}
-                onCancel={() => setShowSignaturePad(false)}
-              />
-            )}
           </Motion.div>
         )}
 
