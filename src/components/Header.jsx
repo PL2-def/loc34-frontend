@@ -1,15 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { User, LogOut, Car, LayoutDashboard, Briefcase } from 'lucide-react';
+import { User, LogOut, Car, LayoutDashboard, Briefcase, Menu, X } from 'lucide-react';
 
 const Header = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate('/');
+    setMobileMenuOpen(false);
   };
 
   return (
@@ -36,16 +38,16 @@ const Header = () => {
           )}
         </nav>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4 md:gap-6">
           {user ? (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 md:gap-4">
               <div className="flex items-center gap-2 text-sm font-medium text-premium-gold">
                 <User size={16} />
-                <span>{user.name}</span>
+                <span className="hidden sm:inline">{user.name}</span>
               </div>
               <button 
                 onClick={handleLogout}
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-gray-400 hover:text-white transition-colors cursor-pointer"
                 title="Déconnexion"
               >
                 <LogOut size={18} />
@@ -59,8 +61,47 @@ const Header = () => {
               Connexion
             </Link>
           )}
+
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-1 text-gray-400 hover:text-white transition-colors cursor-pointer"
+            aria-label="Menu"
+          >
+            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Nav */}
+      {mobileMenuOpen && (
+        <nav className="md:hidden mt-4 pt-4 border-t border-gray-700 flex flex-col gap-3 text-sm font-medium">
+          <Link 
+            to="/" 
+            className="text-gray-300 hover:text-white transition-colors py-2 px-1 hover:bg-gray-800 rounded-sm"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Voitures
+          </Link>
+          {user && (
+            <Link 
+              to="/my-bookings" 
+              className="text-gray-300 hover:text-white transition-colors flex items-center gap-2 py-2 px-1 hover:bg-gray-800 rounded-sm"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <Briefcase size={16} /> Mes Réservations
+            </Link>
+          )}
+          {user?.role === 'admin' && (
+            <Link 
+              to="/admin" 
+              className="text-gray-300 hover:text-white transition-colors flex items-center gap-2 py-2 px-1 hover:bg-gray-800 rounded-sm"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <LayoutDashboard size={16} /> Admin
+            </Link>
+          )}
+        </nav>
+      )}
     </header>
   );
 };

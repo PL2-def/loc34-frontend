@@ -8,7 +8,7 @@ import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { 
   BarChart, Calendar, Car, Users, Settings, Tag, Shield, 
   Wrench, Package, Download, Database, FileText, Palette, Plus, Trash2, ToggleLeft, ToggleRight,
-  Search, ArrowUp, ArrowDown, Check, X, Eye, Save, GripVertical, Upload, Loader2, MessageSquare
+  Search, ArrowUp, ArrowDown, Check, X, Eye, Save, GripVertical, Upload, Loader2, MessageSquare, ChevronDown
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api';
@@ -2634,6 +2634,7 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleUpdateBookingStatus = async (id, status) => {
     try {
@@ -2678,6 +2679,8 @@ const AdminDashboard = () => {
     { id: 'settings', label: 'Système', icon: Database },
   ];
 
+  const activeTabLabel = TABS.find(t => t.id === activeTab)?.label || '';
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -2689,28 +2692,41 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
       {/* Sidebar */}
-      <aside className="w-full md:w-64 bg-white border-r border-gray-200 flex-shrink-0">
-        <div className="p-6 border-b border-gray-100">
-          <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-premium-gold mb-1">
-            Administration
-          </p>
-          <h1 className="text-xl font-serif text-premium-black">Dashboard</h1>
+      <aside className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-gray-200 flex-shrink-0">
+        <div className="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center md:block">
+          <div>
+            <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-premium-gold mb-1">
+              Administration
+            </p>
+            <h1 className="text-xl font-serif text-premium-black">Dashboard</h1>
+          </div>
+          {/* Toggle button on mobile */}
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="md:hidden flex items-center gap-2 px-3 py-2 border border-gray-200 rounded text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+          >
+            <span>{activeTabLabel}</span>
+            <ChevronDown size={14} className={`transform transition-transform ${menuOpen ? 'rotate-180' : ''}`} />
+          </button>
         </div>
-        <nav className="py-4">
+        <nav className={`${menuOpen ? 'block' : 'hidden'} md:block py-2 md:py-4`}>
           {TABS.map(tab => (
             <TabButton 
               key={tab.id}
               active={activeTab === tab.id}
               icon={tab.icon}
               label={tab.label}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => {
+                setActiveTab(tab.id);
+                setMenuOpen(false);
+              }}
             />
           ))}
         </nav>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-6 md:p-12 overflow-y-auto">
+      <main className="flex-1 p-4 md:p-12 overflow-y-auto">
         <AnimatePresence mode="wait">
           <Motion.div
             key={activeTab}
